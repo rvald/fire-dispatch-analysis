@@ -26,7 +26,7 @@ resource "google_dataproc_job" "transform_etl_job" {
             "--dispatch_table=${var.dispatch_table}",
             "--source_bucket_path=${var.data_lake_bucket}",
             "--target_bucket_path=${var.data_lake_bucket}",
-            "--ingest_date=2025-02-13"
+            "--ingest_date=2025-02-14"
         ]
     }
 }
