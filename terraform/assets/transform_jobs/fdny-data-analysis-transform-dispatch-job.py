@@ -14,18 +14,20 @@ from pyspark.sql.functions import *
 parser = argparse.ArgumentParser()
 parser.add_argument('--iceberg_catalog',     required=True)
 parser.add_argument('--iceberg_warehouse',   required=True)
-parser.add_argument('--source_bucket_path',  required=True)
+parser.add_argument('--source_lake_bucket',  required=True)
 parser.add_argument('--dispatch_table',      required=True)
 parser.add_argument('--ingest_date',         required=True)
 parser.add_argument('--project',             required=True)
+
 args = parser.parse_args()
 
 iceberg_catalog        = args.iceberg_catalog
 iceberg_warehouse      = args.iceberg_warehouse
-source_lake_bucket     = args.source_bucket_path
+source_lake_bucket     = args.source_lake_bucket
 dispatch_table         = args.dispatch_table
 ingest_date            = args.ingest_date
 project                = args.project
+
 
 
 # Initialize Spark session in Dataproc
@@ -109,12 +111,67 @@ df = df.withColumn(
     "ingest_on", F.to_date(F.lit(ingest_date), "yyyy-MM-dd")
 ).withColumn("source_from", F.lit("gcp_cloud_storage"))
 
+# Convert schema to SQL column definition
+def schema_to_sql(schema):
+    return ', '.join(["{} {}".format(field.name, field.dataType.simpleString().upper()) for field in schema])
 
-# Create iceberg tables
-df.writeTo(f"{iceberg_catalog}.{iceberg_warehouse}.{dispatch_table}") \
-    .using("iceberg") \
-    .tableProperty("format-version", "2") \
-    .partitionedBy("ingest_on") \
-    .createOrReplace()
+# Column definitions from schema
+column_definitions = schema_to_sql(df.schema)
+
+# SQL for Iceberg Initialization
+spark.sql(f"CREATE NAMESPACE IF NOT EXISTS `{iceberg_catalog}`;".format(iceberg_catalog))
+spark.sql(f"CREATE NAMESPACE IF NOT EXISTS `{iceberg_catalog}`.`{iceberg_warehouse}`;".format(iceberg_catalog, iceberg_warehouse))
+spark.sql(f"DROP TABLE IF EXISTS `{iceberg_catalog}`.`{iceberg_warehouse}`.biglake_dispatch_iceberg;".format(iceberg_catalog, iceberg_warehouse))
+
+# Create an Iceberg Table using the fire_dispatch_schema
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS `{iceberg_catalog}`.`{iceberg_warehouse}`.biglake_dispatch_iceberg
+    ({column_definitions})
+    USING iceberg
+    PARTITIONED BY (INGEST_ON)
+    TBLPROPERTIES (bq_table='fire_dispatch_dataset.biglake_dispatch_iceberg', bq_connection='us.biglake-connection')
+""")
+
+# Create a temporary view from the DataFrame
+df.createOrReplaceTempView("temp_view_fire_dispatch")
+
+# Insert into the Iceberg table using SQL
+spark.sql(f"""
+    INSERT INTO {iceberg_catalog}.{iceberg_warehouse}.biglake_dispatch_iceberg
+    SELECT 
+        STARFIRE_INCIDENT_ID,
+        INCIDENT_DATETIME,
+        ALARM_BOX_BOROUGH,
+        ALARM_BOX_NUMBER,
+        ALARM_BOX_LOCATION,
+        INCIDENT_BOROUGH,
+        ZIPCODE,
+        POLICEPRECINCT,
+        CITYCOUNCILDISTRICT,
+        COMMUNITYDISTRICTT,
+        COMMUNITYSCHOOLDISTRICT,
+        CONGRESSIONALDISTRICT,
+        ALARM_SOURCE_DESCRIPTION_TX,
+        ALARM_LEVEL_INDEX_DESCRIPTION,
+        HIGHEST_ALARM_LEVEL,
+        INCIDENT_CLASSIFICATION,
+        INCIDENT_CLASSIFICATION_GROUP,
+        DISPATCH_RESPONSE_SECONDS_QY,
+        FIRST_ASSIGNMENT_DATETIME,
+        FIRST_ACTIVATION_DATETIME,
+        FIRST_ON_SCENE_DATETIME,
+        INCIDENT_CLOSE_DATETIME,
+        VALID_DISPATCH_RSPNS_TIME_INDC,
+        VALID_INCIDENT_RSPNS_TIME_INDC,
+        INCIDENT_RESPONSE_SECONDS_QY,
+        INCIDENT_TRAVEL_TM_SECONDS_QY,
+        ENGINES_ASSIGNED_QUANTITY,
+        LADDERS_ASSIGNED_QUANTITY,
+        OTHER_UNITS_ASSIGNED_QUANTITY,
+        INGEST_ON,
+        SOURCE_FROM
+    FROM temp_view_fire_dispatch;
+""")
+
 
 spark.stop()

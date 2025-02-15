@@ -25,11 +25,6 @@ variable "dproc_cluster_name" {
   description = "Dataproc cluster name"
 }
 
-variable "catalog_database" {
-  type        = string
-  description = "Iceberg catalog table db name"
-}
-
 variable "dispatch_table" {
   type        = string
   description = "Iceberg table name"
