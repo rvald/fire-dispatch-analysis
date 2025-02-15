@@ -12,29 +12,26 @@ from pyspark.sql.functions import *
 
 # Argument parsing 
 parser = argparse.ArgumentParser()
-parser.add_argument('--catalog_database',   required=True)
-parser.add_argument('--dispatch_table',     required=True)
-parser.add_argument('--source_bucket_path', required=True)
-parser.add_argument('--target_bucket_path', required=True)
-parser.add_argument('--ingest_date',        required=True)
+parser.add_argument('--iceberg_catalog',     required=True)
+parser.add_argument('--iceberg_warehouse',   required=True)
+parser.add_argument('--source_bucket_path',  required=True)
+parser.add_argument('--dispatch_table',      required=True)
+parser.add_argument('--ingest_date',         required=True)
+parser.add_argument('--project',             required=True)
 args = parser.parse_args()
 
-source_lake_bucket = args.source_bucket_path
-target_lake_bucket = args.target_bucket_path
-ingest_date        = args.ingest_date
-catalog_database   = args.catalog_database
-dispatch_table     = args.dispatch_table
+iceberg_catalog        = args.iceberg_catalog
+iceberg_warehouse      = args.iceberg_warehouse
+source_lake_bucket     = args.source_bucket_path
+dispatch_table         = args.dispatch_table
+ingest_date            = args.ingest_date
+project                = args.project
+
 
 # Initialize Spark session in Dataproc
 conf = (
     SparkConf()
-    .setAppName('injest-fire-dispatch-iceberg-table')
-    .set('spark.sql.extensions', 'org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions')
-    .set('spark.sql.catalog.spark_catalog', 'org.apache.iceberg.spark.SparkSessionCatalog')
-    .set('spark.sql.catalog.spark_catalog.type', 'hive')
-    .set(f'spark.sql.catalog.dev', 'org.apache.iceberg.spark.SparkCatalog')
-    .set(f'spark.sql.catalog.dev.type', 'hive')
-    .set(f'spark.sql.warehouse.dir', f"gs://{target_lake_bucket}/transform_zone")
+    .setAppName('ingest-fire-dispatch-iceberg-table')
 )
 spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
@@ -112,19 +109,12 @@ df = df.withColumn(
     "ingest_on", F.to_date(F.lit(ingest_date), "yyyy-MM-dd")
 ).withColumn("source_from", F.lit("gcp_cloud_storage"))
 
-# Check if Iceberg table exists
-table_exists = spark.sql(f"SHOW TABLES IN {catalog_database}").filter(F.col("tableName") == dispatch_table).count() > 0
 
-if table_exists:
-    print(f"Appending data to table {dispatch_table}")
-    df.writeTo(f"{catalog_database}.{dispatch_table}").using("iceberg").tableProperty(
-        "format-version", "2"
-    ).partitionedBy("ingest_on").append()
-else:
-    print(f"Creating table {dispatch_table}")
-    df.writeTo(f"{catalog_database}.{dispatch_table}").using("iceberg").tableProperty(
-        "format-version", "2"
-    ).partitionedBy("ingest_on").createOrReplace()
-
+# Create iceberg tables
+df.writeTo(f"{iceberg_catalog}.{iceberg_warehouse}.{dispatch_table}") \
+    .using("iceberg") \
+    .tableProperty("format-version", "2") \
+    .partitionedBy("ingest_on") \
+    .createOrReplace()
 
 spark.stop()

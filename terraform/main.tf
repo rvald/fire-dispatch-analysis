@@ -18,6 +18,11 @@ module "transform_job" {
 
   catalog_database    = var.catalog_database
   dispatch_table      = var.dispatch_table
+
+  iceberg_warehouse   = var.iceberg_warehouse 
+  iceberg_catalog     = var.iceberg_catalog 
+  bigquery_region     = var.bigquery_region
+  project             = var.project
  
   depends_on = [module.extract_job]
 }

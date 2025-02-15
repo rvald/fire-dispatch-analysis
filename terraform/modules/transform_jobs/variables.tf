@@ -29,3 +29,23 @@ variable "data_lake_bucket" {
   type        = string
   description = "Data source path"
 }
+
+variable "iceberg_warehouse" {
+  type        = string
+  description = "Iceberg data warehouse lake"
+}
+
+variable "iceberg_catalog" {
+  type        = string
+  description = "Iceberg catalog name"
+}
+
+variable "bigquery_region" {
+  type        = string
+  description = "BigQuery dataset region"
+}
+
+variable "project" {
+  type        = string
+  description = "GCP project"
+}
