@@ -14,3 +14,19 @@ models:
       - name: community_district
       - name: community_school_distric
       - name: congressional_district
+
+  - name: dim_alarm
+    description: "Alarm dimension"
+    columns:
+      - name: alarm_key
+        description: The primary key for this table
+        data_tests:
+          - unique
+          - not_null
+      - name: alarm_box_borough
+      - name: alarm_box_number
+      - name: alarm_box_location
+      - name: alarm_source_description
+      - name: alarm_level_index_description
+      - name: highest_alarm_level
+      
