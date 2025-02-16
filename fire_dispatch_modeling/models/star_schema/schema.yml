@@ -30,3 +30,19 @@ models:
       - name: alarm_level_index_description
       - name: highest_alarm_level
       
+  - name: dim_dates
+    columns:
+      - name: date_day
+        description: The primary key for this table
+        data_tests:
+          - unique
+          - not_null
+      - name: day_of_week
+      - name: day_of_month
+      - name: day_of_year
+      - name: week_of_year
+      - name: month_of_year
+      - name: month_name
+      - name: quarter_of_year
+      - name: year_number
+      
