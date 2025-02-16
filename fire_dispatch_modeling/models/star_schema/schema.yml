@@ -1,0 +1,16 @@
+models:
+  - name: dim_location
+    description: "Location dimension"
+    columns:
+      - name: location_key
+        description: The primary key for this table
+        data_tests:
+          - unique
+          - not_null
+      - name: incident_borough
+      - name: zipcode
+      - name: police_precinct
+      - name: city_council_district
+      - name: community_district
+      - name: community_school_distric
+      - name: congressional_district
