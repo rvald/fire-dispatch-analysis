@@ -103,13 +103,16 @@ transformed_columns = [
 # Apply transformations
 df = df.select(*transformed_columns)
 
+# Fix typo in COMMUNITYDISTRICTT
+df = df.withColumnRenamed("COMMUNITYDISTRICTT", "COMMUNITYDISTRICT")
+
 # Add Metadata
 # For this script, one of the transformations that you are going to add is the creation of a new column named `"ingest_on"`
 # Use the `withColumn()` method to create that column
 # Use the `F.to_date()` and `F.lit()` PySpark functions applied over the `ingest_date` object to convert it from string into date
 df = df.withColumn(
-    "ingest_on", F.to_date(F.lit(ingest_date), "yyyy-MM-dd")
-).withColumn("source_from", F.lit("gcp_cloud_storage"))
+    "INGEST_ON", F.to_date(F.lit(ingest_date), "yyyy-MM-dd")
+).withColumn("SOURCE_FROM", F.lit("gcp_cloud_storage"))
 
 # Convert schema to SQL column definition
 def schema_to_sql(schema):
@@ -119,9 +122,12 @@ def schema_to_sql(schema):
 column_definitions = schema_to_sql(df.schema)
 
 # SQL for Iceberg Initialization
-spark.sql(f"CREATE NAMESPACE IF NOT EXISTS `{iceberg_catalog}`;".format(iceberg_catalog))
-spark.sql(f"CREATE NAMESPACE IF NOT EXISTS `{iceberg_catalog}`.`{iceberg_warehouse}`;".format(iceberg_catalog, iceberg_warehouse))
-spark.sql(f"DROP TABLE IF EXISTS `{iceberg_catalog}`.`{iceberg_warehouse}`.biglake_dispatch_iceberg;".format(iceberg_catalog, iceberg_warehouse))
+spark.sql(f"DROP NAMESPACE IF EXISTS `{iceberg_catalog}`;")
+spark.sql(f"DROP NAMESPACE IF EXISTS `{iceberg_catalog}`.`{iceberg_warehouse}`;")
+
+spark.sql(f"CREATE NAMESPACE IF NOT EXISTS `{iceberg_catalog}`;")
+spark.sql(f"CREATE NAMESPACE IF NOT EXISTS `{iceberg_catalog}`.`{iceberg_warehouse}`;")
+spark.sql(f"DROP TABLE IF EXISTS `{iceberg_catalog}`.`{iceberg_warehouse}`.biglake_dispatch_iceberg;")
 
 # Create an Iceberg Table using the fire_dispatch_schema
 spark.sql(f"""
@@ -129,7 +135,7 @@ spark.sql(f"""
     ({column_definitions})
     USING iceberg
     PARTITIONED BY (INGEST_ON)
-    TBLPROPERTIES (bq_table='fire_dispatch_dataset.biglake_dispatch_iceberg', bq_connection='us.biglake-connection')
+    TBLPROPERTIES (bq_table='fire_dispatch_dataset.biglake_dispatch_iceberg', bq_connection='us.fdny-data-analysis-biglake-connection')
 """)
 
 # Create a temporary view from the DataFrame
@@ -148,7 +154,7 @@ spark.sql(f"""
         ZIPCODE,
         POLICEPRECINCT,
         CITYCOUNCILDISTRICT,
-        COMMUNITYDISTRICTT,
+        COMMUNITYDISTRICT,
         COMMUNITYSCHOOLDISTRICT,
         CONGRESSIONALDISTRICT,
         ALARM_SOURCE_DESCRIPTION_TX,
