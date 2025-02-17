@@ -11,8 +11,8 @@ select distinct
     ]) }} AS location_key,
     
     -- Ensure that fields are consistently formatted and handle potential nulls
-    COALESCE(INCIDENT_BOROUGH, 'Unknown') AS incident_borough, 
-    COALESCE(ZIPCODE, 'Unknown') AS zipcode, 
+    COALESCE(INCIDENT_BOROUGH, 'none') AS incident_borough, 
+    COALESCE(ZIPCODE, 'none') AS zipcode, 
     COALESCE(POLICEPRECINCT, -1) AS police_precinct, 
     COALESCE(CITYCOUNCILDISTRICT, -1) AS city_council_district, 
     COALESCE(COMMUNITYDISTRICT, -1) AS community_district, 
