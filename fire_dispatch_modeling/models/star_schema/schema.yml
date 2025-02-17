@@ -1,5 +1,5 @@
 models:
-  - name: dim_location
+  - name: dim_locations
     description: "Location dimension"
     columns:
       - name: location_key
@@ -15,7 +15,7 @@ models:
       - name: community_school_distric
       - name: congressional_district
 
-  - name: dim_alarm
+  - name: dim_alarms
     description: "Alarm dimension"
     columns:
       - name: alarm_key
@@ -29,7 +29,7 @@ models:
       - name: alarm_source_description
       - name: alarm_level_index_description
       - name: highest_alarm_level
-      
+
   - name: dim_dates
     columns:
       - name: date_day
@@ -45,4 +45,19 @@ models:
       - name: month_name
       - name: quarter_of_year
       - name: year_number
+
+  - name: fact_response_times
+    columns:
+      - name: fact_response_time
+        description: The primary key for this table
+        data_tests:
+          - unique
+          - not_null
+      - name: fact_response_time_key
+      - name: location_key
+      - name: alarm_key
+      - name: incident_datetime
+      - name: first_assignment_datetime
+      - name: first_on_scene_datetime
+      
       
