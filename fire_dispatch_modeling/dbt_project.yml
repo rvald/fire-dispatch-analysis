@@ -7,7 +7,7 @@ version: '1.0.0'
 
 vars:
   source_schema: fire_dispatch_dataset
-  star_schema: fire_dispatch_dataset_star_schema
+  star_schema: fdny_data_analysis_star_schema
   surrogate_key_treat_nulls_as_empty_strings: true
   "dbt_date:time_zone": "America/Los_Angeles"
 
@@ -40,4 +40,7 @@ models:
     # Config indicated by + and applies to all files under models/example/
     star_schema:
       +materialized: table
+      +schema: star_schema
+    analytical_views:
+      +materialized: materialized_view
       +schema: star_schema

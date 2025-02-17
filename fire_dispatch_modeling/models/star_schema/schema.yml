@@ -15,7 +15,7 @@ models:
       - name: community_school_distric
       - name: congressional_district
 
-  - name: dim_alarms
+  - name: dim_alarm_levels
     description: "Alarm dimension"
     columns:
       - name: alarm_key

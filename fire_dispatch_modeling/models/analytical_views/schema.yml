@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: avg_response_time_from_dispatch_to_arrival_view
+    description: "Average response time from the dispatch point to the on-scene arrival across different geographies and timeframe"
+    columns:
+      - name: year_number     
+      - name: month_of_year
+      - name: day_of_week
+      - name: incident_borough
+      - name: zipcode
+      - name: police_precinct
+      - name: total_price
+      - name: alarm_level_index_description
+      - name: avg_response_time_seconds
