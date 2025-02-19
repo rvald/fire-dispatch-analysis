@@ -27,6 +27,11 @@ REGION = os.environ.get("REGION")
 PROJECT = os.environ.get("PROJECT")
 CLUSTER_NAME = os.environ.get("CLUSTER_NAME")
 
+ICEBERG_CATALOG   = os.environ.get("ICEBERG_CATALOG")
+ICEBERG_WAREHOUSE = os.environ.get("ICEBERG_WAREHOUSE")
+DISPATCH_TABLE    = os.environ.get("DISPATCH_TABLE")
+BIGQUERY_REGION   = os.environ.get("BIGQUERY_REGION")
+JAR_FILE_BUCKET   = os.environ.get("JAR_FILE_BUCKET")
 
 @dag(
     default_args=default_args,
@@ -53,15 +58,47 @@ def fire_dispatch_analysis_pipeline():
         },
     }
 
-    # upload_extract_dispatch_job_cript_file = LocalFilesystemToGCSOperator(
-    #     task_id = "upload_extract_dispatch_job_cript_file",
-    #     src = "/home/rvald/fire_dispatch_analysis/terraform/assets/extract_jobs/fdny-data-analysis-extract-dispatch-job.py",
-    #     dst = "fdny-data-analysis-extract-dispatch-job.py",
-    #     bucket = SCRIPTS_BUCKET_NAME,
-    # )
-
     extract_dispatch_pyspark_job = DataprocSubmitJobOperator(
         task_id="extract_dispatch_pyspark_job", job=PYSPARK_JOB, region=REGION, project_id=PROJECT
+    )
+
+
+    PYSPARK_TRANSFORM_JOB = {
+        "reference": {"project_id": PROJECT},
+        "placement": {"cluster_name": CLUSTER_NAME},
+        "pyspark_job": {
+            "main_python_file_uri": "gs://{}/fdny-data-analysis-transform-dispatch-job.py".format(SCRIPTS_BUCKET_NAME),
+            
+            "jar_file_uris": [
+                "gs://{}/iceberg-spark-runtime-3.5_2.12-1.5.2.jar".format(JAR_FILE_BUCKET), 
+                "gs://spark-lib/biglake/biglake-catalog-iceberg1.2.0-0.1.0-with-dependencies.jar"
+            ],
+
+            # Properties can include Spark configurations
+            "properties": {
+                "spark.logConf"                                                               : "true",
+                "spark.sql.catalog.{}.blms_catalog".format(ICEBERG_CATALOG)                   : ICEBERG_CATALOG,
+                "spark.sql.catalog.{}.gcp_project".format(ICEBERG_CATALOG)                    : PROJECT,
+                "spark.sql.catalog.{}.catalog-impl".format(ICEBERG_CATALOG)                   : "org.apache.iceberg.gcp.biglake.BigLakeCatalog",
+                "spark.sql.catalog.{}.gcp_location".format(ICEBERG_CATALOG)                   : BIGQUERY_REGION,
+                "spark.sql.catalog.{}".format(ICEBERG_CATALOG)                                : "org.apache.iceberg.spark.SparkCatalog",
+                "spark.sql.catalog.{}.warehouse".format(ICEBERG_CATALOG)                      : "gs://{}/iceberg_warehouse".format(ICEBERG_WAREHOUSE),
+            },
+
+            # Arguments passed to the PySpark job
+            "args": [
+                "--iceberg_catalog={}".format(ICEBERG_CATALOG),
+                "--iceberg_warehouse=iceberg_warehouse",
+                "--source_lake_bucket={}".format(DATA_BUCKET_NAME),
+                "--dispatch_table={}".format(DISPATCH_TABLE),
+                "--ingest_date=2025-02-16",
+                "--project={}".format(PROJECT),
+            ],
+        },
+    }
+
+    transform_dispatch_pyspark_job = DataprocSubmitJobOperator(
+        task_id="transform_dispatch_pyspark_job", job=PYSPARK_TRANSFORM_JOB, region=REGION, project_id=PROJECT
     )
 
     # `end` task based on another `DummyOperator`
@@ -70,6 +107,7 @@ def fire_dispatch_analysis_pipeline():
     (
         start
         >> extract_dispatch_pyspark_job
+        >> transform_dispatch_pyspark_job
         >> end
     )
 
