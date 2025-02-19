@@ -55,4 +55,11 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+### dbt ###
+target/
+dbt_modules/
+dbt_packages/
+logs/
+
+
 # End of https://www.toptal.com/developers/gitignore/api/terraform,linux
