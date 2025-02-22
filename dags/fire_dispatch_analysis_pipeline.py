@@ -6,6 +6,9 @@ from airflow.decorators import dag, task
 from airflow.operators.dummy import DummyOperator
 from airflow.providers.google.cloud.operators.dataproc import DataprocSubmitJobOperator
 from airflow.providers.google.cloud.transfers.local_to_gcs import LocalFilesystemToGCSOperator
+from airflow.providers.google.cloud.operators.cloud_run import CloudRunExecuteJobOperator
+   
+
 from airflow.utils.dates import days_ago
 
 INGEST_DAY = date.today()
@@ -101,6 +104,14 @@ def fire_dispatch_analysis_pipeline():
         task_id="transform_dispatch_pyspark_job", job=PYSPARK_TRANSFORM_JOB, region=REGION, project_id=PROJECT
     )
 
+    dbt_data_modeling_cloud_run = CloudRunExecuteJobOperator(
+        task_id="dbt_data_modeling_cloud_run",
+        project_id=PROJECT,
+        region=REGION,
+        job_name="fire-dispatch-modeling-dbt-on-cloud-run",
+        deferrable=False,
+    )
+
     # `end` task based on another `DummyOperator`
     end = DummyOperator(task_id="end")
 
@@ -108,6 +119,7 @@ def fire_dispatch_analysis_pipeline():
         start
         >> extract_dispatch_pyspark_job
         >> transform_dispatch_pyspark_job
+        >> dbt_data_modeling_cloud_run
         >> end
     )
 
