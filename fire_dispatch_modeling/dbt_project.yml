@@ -6,7 +6,7 @@ name: 'fire_dispatch_modeling'
 version: '1.0.0'
 
 vars:
-  source_schema: fire_dispatch_dataset
+  source_schema: fdny_data_analysis_warehouse
   star_schema: fdny_data_analysis_star_schema
   surrogate_key_treat_nulls_as_empty_strings: true
   "dbt_date:time_zone": "America/Los_Angeles"

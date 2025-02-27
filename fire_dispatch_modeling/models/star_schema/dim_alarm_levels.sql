@@ -15,4 +15,4 @@ select distinct
     COALESCE(HIGHEST_ALARM_LEVEL, 'none') AS highest_alarm_level
 
 from
-    {{ var("source_schema") }}.biglake_dispatch_iceberg
+    {{ var("source_schema") }}.fire_dispatch_serving_data

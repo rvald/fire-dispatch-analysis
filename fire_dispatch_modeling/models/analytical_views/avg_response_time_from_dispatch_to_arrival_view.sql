@@ -2,6 +2,9 @@
 {{
     config(
         on_configuration_change = 'apply',
+        pre_hook = [
+        "DROP MATERIALIZED VIEW IF EXISTS `fdny-data-analysis.fdny_data_analysis_star_schema.avg_response_time_from_dispatch_to_arrival_view`;"
+        ]
     )
 }}
 

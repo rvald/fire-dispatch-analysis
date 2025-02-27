@@ -29,5 +29,5 @@ select
     FIRST_ASSIGNMENT_DATETIME as first_assignment_datetime,
     FIRST_ON_SCENE_DATETIME as first_on_scene_datetime
 from 
-    {{ var("source_schema") }}.biglake_dispatch_iceberg 
+    {{ var("source_schema") }}.fire_dispatch_serving_data
     

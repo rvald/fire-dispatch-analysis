@@ -20,4 +20,4 @@ select distinct
     COALESCE(CONGRESSIONALDISTRICT, -1) AS congressional_district
 
 from
-    {{ var("source_schema") }}.biglake_dispatch_iceberg
+    {{ var("source_schema") }}.fire_dispatch_serving_data
