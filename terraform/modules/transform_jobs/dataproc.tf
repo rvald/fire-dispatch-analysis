@@ -34,7 +34,7 @@ resource "google_dataproc_job" "transform_etl_job" {
             "--iceberg_warehouse=iceberg_warehouse",
             "--source_lake_bucket=${var.data_lake_bucket}",
             "--dispatch_table=${var.dispatch_table}",
-            "--ingest_date=2025-02-14",
+            "--ingest_date=2025-02-27",
             "--project=${var.project}"
         ]
     }

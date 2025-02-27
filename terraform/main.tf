@@ -24,3 +24,16 @@ module "transform_job" {
  
   depends_on = [module.extract_job]
 }
+
+module "serving_job" {
+  source = "./modules/serving"
+
+  region              = var.region
+  scripts_bucket      = var.scripts_bucket
+  dproc_cluster_name  = var.dproc_cluster_name
+  
+  iceberg_warehouse   = var.iceberg_warehouse 
+  project             = var.project
+
+  depends_on = [module.transform_job]
+}
