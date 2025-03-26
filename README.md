@@ -81,7 +81,15 @@ The project follows a modular architecture with the following key components:
 
 - **Star Schema**:
   - Fact Table: `fact_response_times`
-  - Dimension Tables: `dim_locations`, `dim_alarm_levels`, `dim_dates`
+
+---
 
 - **Analytical View**:
   - Average response time from dispatch to arrival, grouped by geography and time.
+ 
+---
+
+## Resources
+
+- **Data**: [Fire Incident Dispatch Data](https://data.cityofnewyork.us/Public-Safety/Fire-Incident-Dispatch-Data/8m42-w767/about_data)
+
