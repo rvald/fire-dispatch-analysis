@@ -38,7 +38,7 @@ JAR_FILE_BUCKET   = os.environ.get("JAR_FILE_BUCKET")
 
 @dag(
     default_args=default_args,
-    schedule_interval=timedelta(days=1),  
+    schedule_interval='@monthly',  
     catchup=False,
     dag_id="fire_dispatch_analysis_pipeline_dag",
 )
@@ -94,7 +94,7 @@ def fire_dispatch_analysis_pipeline():
                 "--iceberg_warehouse=iceberg_warehouse",
                 "--source_lake_bucket={}".format(DATA_BUCKET_NAME),
                 "--dispatch_table={}".format(DISPATCH_TABLE),
-                "--ingest_date=2025-02-16",
+                "--ingest_date=2025-02-24",
                 "--project={}".format(PROJECT),
             ],
         },
